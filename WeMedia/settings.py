@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # ######
     'rest_framework',
+    'main',
+    'user',
 ]
 
 MIDDLEWARE = [
@@ -52,7 +54,7 @@ MIDDLEWARE = [
 ]
 
 # 设置缓存
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache_db'
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 CACHES = {
     'default': {
@@ -93,11 +95,14 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD': '258741',
         'HOST': 'localhost',
-        'POST': '3306'
+        'POST': '3306',
+        'OPTIONS': {
+            'init_command': 'SET foreign_key_checks = 0;',
+        }
     }
 }
 
-
+AUTH_USER_MODEL = 'user.User'
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
@@ -140,3 +145,4 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
 }
+

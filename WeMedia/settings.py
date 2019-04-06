@@ -57,24 +57,21 @@ MIDDLEWARE = [
 # 设置缓存
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-#         'LOCATION': '127.0.0.1:11211',
-#     }
-# }
-
-
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'cache_table',
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
     },
-    'user': {
+    'user2': {
         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'cache_table2',
-        "TIMEOUT": 302400,
-    }
+        'LOCATION': 'user_cache_table',
+        "TIMEOUT": 2592000,
+    },
+    'user1': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
+        'TIMEOUT': 2592000,
+    },
 }
 
 ROOT_URLCONF = 'WeMedia.urls'
@@ -160,6 +157,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+MEDIA_ROOT = 'media/'
+MEDIA_URL = 'media/'
+
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
@@ -175,10 +175,11 @@ REST_FRAMEWORK = {
 }
 
 JWT_AUTH = {
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=7),
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=30),
     # 'JWT_ISSUER': 'https://poma.nsfocus.com',
     'JWT_AUTH_HEADER_PREFIX': 'Bearer',
+    'JWT_LEEWAY': datetime.timedelta(days=30),
     'JWT_ALLOW_REFRESH': True,
-    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=3),
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=360),
     'JWT_AUTH_COOKIE': 'Token',
 }

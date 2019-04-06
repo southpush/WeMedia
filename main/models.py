@@ -1,19 +1,13 @@
-# from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import AbstractUser
-# from django.contrib.auth.validators import UnicodeUsernameValidator
-# from django.db import models
-#
-#
-# class OrdinaryUser(AbstractBaseUser):
-#     username_validator = UnicodeUsernameValidator()
-#
-#     username = models.CharField(
-#         _('username'),
-#         max_length=20,
-#         unique=True,
-#         validators=[username_validator],
-#         error_messages={
-#             'unique': _("A user with that username already exists."),
-#         },
-#     )
-#
+from django.db import models
+from django.utils import timezone
+
+
+class Posts(models.Model):
+    content = models.TextField()
+    # image_count = models.IntegerField(choices=list(range(0, 10)), default=0, null=False)
+    image_path = models.TextField(null=True, blank=True, default='')
+    is_delete = models.BooleanField(null=False, default=False)
+    created_time = models.DateTimeField("发表时间", default=timezone.now)
+
+    author = models.ForeignKey('user.Profile', null=False, on_delete=models.CASCADE)
+

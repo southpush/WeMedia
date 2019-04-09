@@ -1,0 +1,6 @@
+Welcome to we-media {{ username }}.
+
+
+Please verify your email by visiting the following website:
+
+{{ verifyURL }}

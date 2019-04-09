@@ -15,6 +15,8 @@ import datetime
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import privacyConfig
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
@@ -171,7 +173,12 @@ REST_FRAMEWORK = {
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
-    )
+    ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ),
+    'EXCEPTION_HANDLER': 'main.exceptions.custom_exception_handler',
 }
 
 JWT_AUTH = {
@@ -183,3 +190,15 @@ JWT_AUTH = {
     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=360),
     'JWT_AUTH_COOKIE': 'Token',
 }
+
+# email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = privacyConfig.emailUser
+EMAIL_HOST_PASSWORD = privacyConfig.emailPassword
+EMAIL_PORT = 587
+EMAIL_HOST = "smtp.office365.com"
+DEFAULT_FROM_EMAIL = "pu <southpush@outlook.com>"
+# EMAIL_HOST_USER = 'southpush@outlook.com'
+# EMAIL_HOST_PASSWORD = 'ling455254165'
+

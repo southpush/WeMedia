@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>verify your email</title>
+	<style type="text/css">
+		.content{
+			width: 100%;
+		}
+		.content div{
+			width: 100%;
+			text-align: center;
+		}
+		.welcome{
+			padding-top: 40px;
+			padding-bottom: 40px;
+		}
+		.content>div>button{
+			width: 80%;
+			padding: 8px 16px;
+			border: none;
+			background-color: rgb(75, 179, 244);
+			color: rgb(255,255,255);
+			font-size: 18px;
+			line-height: 1.5em;
+			font-weight: 700;
+			border-radius: 3px;
+		}
+		.verify{
+			padding: 30px 20px;
+		}
+		.verify>div{
+			margin-top: 40px;
+		}
+		hr{
+			background: rgb(228, 233, 236);
+			border: none;
+			height: 2px;
+		}
+		.content>.notworking>div{
+			text-align: left;
+			padding-left: 30px;
+		}
+		.content>.help{
+			text-align: left;
+			color: #849097;
+			padding-left: 30px;
+			font-size: 13px;
+			margin-top: 30px;
+		}
+		.content>.notworking>div:first-child{
+			font-size: 13px;
+		}
+		.content>.notworking>div:nth-child(2){
+			margin-top: 50px;
+		}
+		.notworking{
+			margin-top: 40px;
+			margin-bottom: 40px;
+		}
+	</style>
+</head>
+<body>
+	<div class="content">
+		<div class="welcome">
+			<h2>Welcome to we-media, {{ username }}</h2>
+		</div>
+
+		<hr/>
+		<div class="verify">
+			<button href="{{ verifyURL }}">Verify '{{ email }}'</button>
+			<div>
+				<b>Why verify?</b>
+				<p>Many sites using Disqus require a verified email for commenting to prevent spam. Verifying lets you join discussions quickly and easily.</p>
+			</div>
+		</div>
+		<hr/>
+		<div class="notworking">
+			<div>
+				<p>Button not working? Paste this link into your browser:</p>
+				<a href='{{ verifyURL }}'>{{ verifyURL }}</a>
+			</div>
+			<div>
+				<p>Thanks,</p>
+				<p>The we-media team.</p>
+			</div>
+		</div>
+		<hr/>
+		<div class="help">
+			This email was sent because you recently registered for a Disqus account. If you believe this is an error, ignore this message.
+		</div>
+	</div>
+</body>
+</html>

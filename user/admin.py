@@ -26,4 +26,5 @@ admin.site.register(User, UserAdmin)
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'nickname')
+    list_display = ('user', 'nickname', 'email', 'is_active', "is_admin")
+    date_hierarchy = 'registration_date'

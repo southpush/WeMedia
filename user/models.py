@@ -1,10 +1,10 @@
 import time
-
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from enum import Enum
+from django.utils.crypto import get_random_string
 
 
 class PermissionChoice(Enum):
@@ -23,7 +23,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     nickname = models.CharField(max_length=20, verbose_name='微博名',
-                                unique=True, default="用户"+str(int(time.time())))
+                                unique=True, default="用户"+get_random_string(length=14))
     email = models.EmailField(_("email address"), unique=True, null=True, blank=True)
     is_active = models.BooleanField(_('active'), default=False)
     is_admin = models.BooleanField(_('admin'), default=False)
@@ -35,4 +35,27 @@ class Profile(models.Model):
     def __str__(self):
         return '<Profile: %s for %s>' % (self.nickname, self.user.username)
 
+    class Meta:
+        permissions = (
+            # 普通用户的权限
+            ('publish_posts', "可以发微博"),
+            ('comment', "可以评论微博"),
+            ('forward', "可以转发微博"),
+            ('like', "可以点在微博"),
+            ('change_info', "可以更改个人信息"),
+            # 管理员用户的权限
+            ('delete_posts', "可以删除某一条微博"),
+            ('publish_tips', "可以针对某一条微博发出公告"),
+            ("ban_user", "可以禁言用户"),
+        )
 
+
+class BannedRecode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    banned_permission = models.ForeignKey(Permission, on_delete=models.PROTECT, default=None,
+                                          null=True, blank=True)
+    exp_time = models.DateTimeField(auto_now_add=True, auto_now=False)
+
+
+
+timezone

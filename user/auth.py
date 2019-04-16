@@ -2,19 +2,20 @@ import datetime
 import time
 
 import jwt
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from django.core.mail.message import EmailMultiAlternatives
 from django.template.loader import get_template
+from django.utils import timezone
 from rest_framework.authentication import get_authorization_header
-from rest_framework import authentication, serializers
+from rest_framework import authentication, serializers, permissions
 from rest_framework import exceptions
 from main import exceptions as custom_exception
 from rest_framework_jwt.settings import api_settings
 from django.core.cache import caches
-from rest_framework_jwt.views import verify_jwt_token
 from django.utils.translation import ugettext as _
 
 from WeMedia import settings
+from user.models import BannedRecode
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -64,6 +65,25 @@ class TokenAuthentication(authentication.BaseAuthentication):
         return user, auth[1]
 
 
+# 还没验证邮箱用的Authentication
+class TokenAuthenticationNotActive(authentication.BaseAuthentication):
+    def authenticate(self, request):
+        auth = get_authorization_header(request).split()
+        username = request.META.get("HTTP_USERNAME", b'')
+        if not username or not auth:
+            raise exceptions.NotAuthenticated
+        token_in_cache = user_cache1.get(username+"_token", user_cache2.get(username+"_token"))
+        if not token_in_cache:
+            raise exceptions.AuthenticationFailed('Token is not in cache.')
+        elif token_in_cache.encode('utf-8') != auth[1]:
+            raise exceptions.AuthenticationFailed
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise exceptions.AuthenticationFailed("No such user.")
+        return user, auth[1]
+
+
 def new_account_auth_email(user, to_email, base_uri):
     payload = {
         "username": user.username,
@@ -89,7 +109,7 @@ def new_account_auth_email(user, to_email, base_uri):
     except Exception as e:
         raise custom_exception.EmailSendFailException(detail=e.__repr__())
 
-    return True
+    return token
 
 
 def verify_email(token):
@@ -136,4 +156,58 @@ class VerificationEmailSerializer(serializers.Serializer):
             raise serializers.ValidationError(msg)
 
         return payload
+
+
+# 验证用户的权限的抽象类
+class CustomPermission(permissions.BasePermission):
+    def look_record(self, request, view, codename):
+        user = request.user
+        permission = Permission.objects.get(codename=codename)
+        if not user.has_perms(codename):
+            try:
+                record = BannedRecode.objects.filter(exp_time__gte=timezone.now()).get(
+                    user=user, banned_permission=permission
+                )
+            except BannedRecode.DoesNotExist:
+                # 如果没有在时间内的封禁记录就解封
+                user.user_permissions.add(permission)
+                return True
+
+            raise exceptions.PermissionDenied({
+                'detail': 'user has not permission: ' + permission.name,
+                'exp_time': record.exp_time.timestamp(),
+            }, code="has_not_permission")
+
+        return True
+
+
+# 验证发微博的权限
+class PublishPostsPermission(CustomPermission):
+    def has_permission(self, request, view):
+        return self.look_record(request=request, view=view, codename='publish_posts')
+
+
+# 验证评论微博的权限
+class CommentPermission(CustomPermission):
+    def has_permission(self, request, view):
+        return self.look_record(request=request, view=view, codename='comment')
+
+
+# 转发微博权限
+class ForwardPermission(CustomPermission):
+    def has_permission(self, request, view):
+        return self.look_record(request=request, view=view, codename='forward')
+
+
+# 点赞微博权限
+class LikePermission(CustomPermission):
+    def has_permission(self, request, view):
+        return self.look_record(request=request, view=view, codename='like')
+
+
+# 更改个人信息权限
+class ChangeInfoPermission(CustomPermission):
+    def has_permission(self, request, view):
+        return self.look_record(request=request, view=view, codename='change_info')
+
 

@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.exceptions import APIException, ValidationError, ErrorDetail
 from rest_framework.views import exception_handler
 
 exception_message = {
@@ -7,7 +7,8 @@ exception_message = {
     "not_active": "还没有验证邮箱。",
     "email_send_fail": "邮件发送失败",
     "fail_to_create_user": "创建用户失败",
-    "has_not_permission": '用户没有该操作权限'
+    "has_not_permission": '用户没有该操作权限',
+    "no_such_user": "查询不到该用户",
 
 }
 
@@ -27,7 +28,7 @@ def custom_exception_handler(exc, context):
                 = exception_message.get("field_verification_fail", "No message.")
             return response
 
-        if isinstance(exc.get_full_details(), dict):
+        if isinstance(exc.get_full_details().get('message', dict()), dict):
             error_dict = exc.get_full_details()
             for key in error_dict:
                 response.data.get("errors_info")[key] = error_dict[key]['message']

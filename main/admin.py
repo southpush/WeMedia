@@ -5,4 +5,4 @@ from .models import Posts
 
 @admin.register(Posts)
 class PostsAdmin(admin.ModelAdmin):
-    list_display = ('content', 'image_path', "is_delete", "created_time", "author")
+    list_display = ('content', "is_delete", "created_time", "author")

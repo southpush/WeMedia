@@ -20,7 +20,7 @@ from rest_framework.authentication import get_authorization_header
 from .serializers import NewAccountSerializer, DeleteUserSerializer, UserProfileForUserSerializer
 
 from user.auth import TokenAuthentication, set_user_token_cache, new_account_auth_email, \
-    VerificationEmailSerializer, PublishPostsPermission, base_permission_list, TokenAuthenticationNotActive
+    VerificationEmailSerializer, PublishPostsPermission, TokenAuthenticationNotActive
 
 user_cache1 = caches['user1']
 user_cache2 = caches['user2']

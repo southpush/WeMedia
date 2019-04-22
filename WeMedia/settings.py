@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'main',
     'user',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'mptt'
 ]
 
 MIDDLEWARE = [
@@ -166,7 +167,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 5,
     # django-restframework-jwt配置
     'DEFAULT_PERMISSION_CLASS': (
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',

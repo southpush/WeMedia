@@ -57,5 +57,3 @@ class BannedRecode(models.Model):
     exp_time = models.DateTimeField(auto_now_add=True, auto_now=False)
 
 
-
-timezone

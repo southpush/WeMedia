@@ -4,15 +4,19 @@ import time
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from rest_framework import generics, status, exceptions
+from django.db.models.query_utils import Q
+from rest_framework import generics, status, exceptions, viewsets
+from rest_framework.decorators import action
+from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 
 from WeMedia import settings
-from main.models import Posts
+from main.models import Posts, Reply
 from main.response import Response
-from main.serializers import PostsSerializer, HeadImageSerializer, PostsListSerializer
-from user.auth import TokenAuthentication, PublishPostsPermission
-
+from main.serializers import PostsSerializer, HeadImageSerializer, PostsListSerializer, ForwardSerializer, \
+    ReplySerializer
+from user.auth import TokenAuthentication, PublishPostsPermission, ForwardPermission, CommentPermission
+from .tasks import add
 
 # 获取用户微博列表的api（不用登陆即可访问）
 class PostsList(generics.ListAPIView):
@@ -27,9 +31,14 @@ class PostsList(generics.ListAPIView):
         return Posts.objects.filter(author=user.profile, is_delete=False).order_by('-created_time')
 
 
+# 获取一条微博的详细信息
+class PostsDetail(APIView):
+    pass
+
+
 # 用户上传微博的api
 class PostsUpload(APIView):
-    authentication_classes = (TokenAuthentication, )
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (PublishPostsPermission, )
     serializer_class = PostsListSerializer
 
@@ -48,6 +57,98 @@ class PostsUpload(APIView):
         post.is_delete = True
         post.save()
         return Response()
+
+
+# 转发微博的API
+# 应该有两个权限，一个发微博，一个转发微博
+class ForwardView(GenericAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (PublishPostsPermission, ForwardPermission)
+    serializer_class = ForwardSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.create(serializer.validated_data)
+        return Response('ojbk', status.HTTP_200_OK)
+
+
+# 用户评论微博
+class ReplyView(viewsets.ModelViewSet):
+    authentication_classes = (TokenAuthentication, )
+    permission_classes = (CommentPermission,)
+    serializer_class = ReplySerializer
+
+    @action(detail=False, methods=['post'])
+    def upload_reply(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(detail=False, methods=['delete'])
+    def delete_reply(self, request):
+        profile = request.user.profile
+        try:
+            reply = Reply.objects.filter(user=profile).get(pk=request.query_params.get('reply_id', 0))
+        except Reply.DoesNotExist:
+            raise exceptions.NotFound('无法找到指定评论')
+        reply.is_delete = True
+        reply.save()
+        return Response('', status=status.HTTP_200_OK)
+
+
+# 用户获取微博评论
+class ReplyListView(generics.ListAPIView):
+    serializer_class = ReplySerializer
+
+    def get_queryset(self):
+        try:
+            post = Posts.objects.get(pk=self.request.query_params.get('post_id', 0))
+        except Posts.DoesNotExist:
+            raise exceptions.NotFound('无法找到该微博', code='no_such_posts')
+        return post.replies.all().order_by('-created_time')
+
+    # 获取某条评论下的所有回复
+    @action(detail=True, methods=['get'])
+    def reply_detail(self, request):
+        try:
+            reply = Reply.objects.get(pk=request.query_params.get('reply_id', 0))
+        except Reply.DoesNotExist:
+            raise exceptions.NotFound('无法找到指定评论', code='no_such_reply')
+        serializer = self.get_serializer(reply.get_descendants(), many=True)
+        return Response(serializer.data)
+
+
+# 用户获取一条评论下的所有回复
+class ReplyDetailView(generics.ListAPIView):
+    serializer_class = ReplySerializer
+    queryset = Reply.objects.all()
+
+    def list(self, request, *args):
+        try:
+            reply = Reply.objects.get(pk=request.query_params.get('reply_id', 0))
+        except Reply.DoesNotExist:
+            raise exceptions.NotFound('无法找到指定评论', code='no_such_reply')
+        serializer = self.get_serializer(reply.get_descendants(), many=True)
+        return Response(serializer.data)
+
+
+# 获取整个对话
+class DialogueView(generics.ListAPIView):
+    serializer_class = ReplySerializer
+
+    def get_queryset(self):
+        try:
+            reply = Reply.objects.get(pk=self.request.query_params.get('reply_id', 0))
+            if reply.is_root_node():
+                raise exceptions.ParseError('根评论无法查找会话')
+        except Reply.DoesNotExist:
+            raise exceptions.NotFound('无法找到指定评论', code='no_such_reply')
+        result = add.delay(2, 3)
+        print(result)
+        return reply.get_family().filter(Q(user=reply.user) | Q(user=reply.parent.user))
 
 
 class TestView(APIView):

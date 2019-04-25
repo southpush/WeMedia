@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'main',
     'user',
     'rest_framework.authtoken',
-    'mptt'
+    'mptt',
+    'django_celery_results'
 ]
 
 MIDDLEWARE = [
@@ -59,11 +60,16 @@ MIDDLEWARE = [
 
 # 设置缓存
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+SESSION_CACHE_ALIAS = 'default'
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': "django_redis.client.DefaultClient"
+        },
+        "TIMEOUT": 2592000,
     },
     'user2': {
         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
@@ -71,8 +77,11 @@ CACHES = {
         "TIMEOUT": 2592000,
     },
     'user1': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': "django_redis.client.DefaultClient"
+        },
         'TIMEOUT': 2592000,
     },
 }
@@ -209,3 +218,5 @@ DEFAULT_FROM_EMAIL = "pu <southpush@outlook.com>"
 # EMAIL_HOST_USER = 'southpush@outlook.com'
 # EMAIL_HOST_PASSWORD = 'ling455254165'
 
+# celery配置
+CELERY_RESULT_BACKEND = 'django-cache'

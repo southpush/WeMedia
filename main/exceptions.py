@@ -9,6 +9,8 @@ exception_message = {
     "fail_to_create_user": "创建用户失败",
     "has_not_permission": '用户没有该操作权限',
     "no_such_user": "查询不到该用户",
+    "no_such_posts": "没有该微博",
+    'has_been_deleted': '该微博已被删除',
 
 }
 

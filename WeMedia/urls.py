@@ -24,7 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-token-auth/', obtain_jwt_token),
     path('api/v1.0/', include('user.urls')),
-    path('api/v1.0/', include('main.urls'))
+    path('api/v1.0/posts/', include('main.urls'))
 ]
 
 urlpatterns += static('/media/', document_root=settings.MEDIA_ROOT)

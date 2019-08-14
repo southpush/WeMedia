@@ -1,2 +1,2 @@
-emailUser = 'southpush@outlook.com'
-emailPassword = 'ling455254165'
+emailUser = 'youremail@xxx.com'
+emailPassword = 'yourpassword'
